@@ -16,13 +16,13 @@ jobs:
         run: |
           unzip -o whatsapp_clone.zip -d. || true
           PROJECT=$(find. -name "package.json" -not -path "*/node_modules/*" | head -n 1 | xargs dirname)
+          echo "Project at $PROJECT"
           cd "$PROJECT"
           npm install
           cd android
           chmod +x gradlew
          ./gradlew assembleDebug
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: Mera-Chat-APK
           path: "**/app-debug.apk"
