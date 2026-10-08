@@ -10,14 +10,14 @@ jobs:
           node-version: 18
       - uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
-      - name: Build APK
+          distribution: temurin
+          java-version: 17
+      - name: Build
         run: |
           unzip -o whatsapp_clone.zip -d. || true
-          PROJECT=$(find. -name "package.json" -not -path "*/node_modules/*" | head -n 1 | xargs dirname)
-          echo "Found $PROJECT"
-          cd "$PROJECT"
+          PROJECT=$(find. -name package.json -not -path "*/node_modules/*" | head -n 1 | xargs dirname)
+          echo $PROJECT
+          cd $PROJECT
           npm install
           cd android
           chmod +x gradlew
