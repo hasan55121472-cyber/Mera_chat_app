@@ -1,5 +1,4 @@
 name: Build APK
-
 on:
   push:
     branches:
@@ -8,30 +7,35 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
+      - uses: actions/checkout@v4
+      
+      - name: Find Flutter project
+        run: |
+          ls -la
+          PUB_DIR=$(find . -name "pubspec.yaml" -exec dirname {} \; | head -n 1)
+          echo "Project found at: $PUB_DIR"
+          echo "PROJECT_DIR=$PUB_DIR" >> $GITHUB_ENV
+          
+      - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
 
       - name: Get dependencies
         run: flutter pub get
+        working-directory: ${{ env.PROJECT_DIR }}
 
       - name: Build APK
         run: flutter build apk --release
+        working-directory: ${{ env.PROJECT_DIR }}
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: app-release-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: ${{ env.PROJECT_DIR }}/build/app/outputs/flutter-apk/app-release.apk
