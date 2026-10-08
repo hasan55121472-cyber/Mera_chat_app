@@ -6,7 +6,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Unzip
-        run: unzip whatsapp_clone.zip -o
+        run: unzip whatsapp_clone.zip -o -d temp && mv temp/*/*. || mv temp/*. || true
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -14,19 +14,19 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
-          java-version: 17
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
       - name: Install
         run: |
-          cd whatsapp_clone
           npm install
-      - name: Build
+          cd android && chmod +x gradlew && cd..
+      - name: Build APK
         run: |
-          cd whatsapp_clone/android
-          chmod +x gradlew
-         ./gradlew assembleRelease
+          cd android &&./gradlew assembleDebug && cd..
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Mera_chat_app
-          path: whatsapp_clone/android/app/build/outputs/apk/release/app-release.apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
