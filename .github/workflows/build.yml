@@ -1,4 +1,4 @@
-name: Build APK
+name: build
 on: [push]
 jobs:
   build:
@@ -13,11 +13,14 @@ jobs:
         with:
           channel: stable
 
-      - name: Build APK
+      - name: Unzip and Build APK
         run: |
+          ls -la
           unzip -o whatsapp_clone.zip -d. || true
+          echo "---- After unzip ----"
+          ls -la
           PROJECT=$(find. -name "pubspec.yaml" | head -n 1 | xargs dirname)
-          echo "Project at $PROJECT"
+          echo "Project found at: $PROJECT"
           cd "$PROJECT"
           flutter pub get
           flutter build apk --debug
