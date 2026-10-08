@@ -16,7 +16,7 @@ jobs:
         run: |
           unzip -o whatsapp_clone.zip -d. || true
           PROJECT=$(find. -name "package.json" -not -path "*/node_modules/*" | head -n 1 | xargs dirname)
-          echo "Project at $PROJECT"
+          echo "Found $PROJECT"
           cd "$PROJECT"
           npm install
           cd android
