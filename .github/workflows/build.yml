@@ -1,32 +1,38 @@
 name: Build APK
-on: [push]
+on:
+  push:
+    branches:
+      - main
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-java@v4
         with:
-          distribution: temurin
-          java-version: 17
+          distribution: 'temurin'
+          java-version: '17'
+
       - uses: subosito/flutter-action@v2
         with:
-          channel: stable
+          channel: 'stable'
 
-      - name: Unzip and Build APK
+      - name: Build APK
         run: |
+          echo "--- Unzipping project ---"
+          unzip -o whatsapp_clone.zip
+          echo "--- After unzip ---"
           ls -la
-          unzip -o whatsapp_clone.zip -d.
-          echo "---- After unzip ----"
-          ls -la
-          PROJECT=$(find. -name "pubspec.yaml" | head -n 1 | xargs dirname)
-          echo "Project found at: $PROJECT"
-          cd "$PROJECT"
+          PUB_DIR=$(find . -name "pubspec.yaml" -exec dirname {} \; | head -n 1)
+          echo "Project found at: $PUB_DIR"
+          cd $PUB_DIR
           flutter pub get
-          flutter build apk --debug
+          flutter build apk --release
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Mera-Chat-APK
-          path: "**/app-debug.apk"
+          name: app-release-apk
+          path: "**/build/app/outputs/flutter-apk/app-release.apk"
