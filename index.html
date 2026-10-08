@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mera Chat App</title>
+<style>
+body{font-family:sans-serif;background:#111b21;margin:0}
+.header{background:#008069;color:white;padding:15px;font-size:20px;font-weight:bold}
+.chat{background:white;height:80vh;padding:10px;overflow-y:auto}
+.msg{background:#d9fdd3;padding:8px 12px;border-radius:8px;margin:5px 0;width:fit-content;max-width:70%}
+.input-area{display:flex;padding:10px;background:#f0f2f5;position:fixed;bottom:0;width:100%;box-sizing:border-box}
+.input-area input{flex:1;padding:12px;border-radius:25px;border:none;outline:none}
+.input-area button{background:#008069;color:white;border:none;padding:0 20px;border-radius:50%;margin-left:10px;font-size:20px}
+</style>
+</head>
+<body>
+<div class="header">Mera Chat App</div>
+<div class="chat" id="chat"></div>
+<div class="input-area">
+<input id="msgInput" placeholder="Message likho...">
+<button onclick="send()">></button>
+</div>
+<script>
+function send(){
+let i=document.getElementById('msgInput');
+let c=document.getElementById('chat');
+if(i.value.trim()=='')return;
+c.innerHTML+='<div class="msg">'+i.value+'</div>';
+i.value='';
+c.scrollTop=c.scrollHeight;
+}
+</script>
+</body>
+</html>
