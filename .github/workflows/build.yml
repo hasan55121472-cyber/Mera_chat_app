@@ -10,10 +10,8 @@ jobs:
         run: |
           mkdir -p lib
           mv *.dart lib/ || true
-          rm -f AndroidManifest.xml MainActivity.kt build.gradle settings.gradle
+          rm -f AndroidManifest.xml MainActivity.kt build.gradle settings.gradle || true
           rm -f *.xml google-services.json || true
-          ls -la
-          ls -la lib/
 
       - uses: actions/setup-java@v4
         with:
@@ -25,8 +23,7 @@ jobs:
           channel: 'stable'
 
       - name: Create Android Folder
-        run: |
-          flutter create. --platforms=android --org com.example.whatsappclone
+        run: flutter create. --platforms=android --org com.example.whatsappclone
 
       - run: flutter pub get
       - run: flutter build apk --release
