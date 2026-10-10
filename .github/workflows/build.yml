@@ -13,14 +13,21 @@ jobs:
         with:
           channel: 'stable'
 
-      - name: Fix Project Structure
+      - name: Fix Project
         run: |
           mkdir -p lib
           mv -f *.dart lib/ 2>/dev/null || true
-          echo "Lib folder me ye files gayi:"
-          ls lib
           mkdir -p android/app
           mv -f google-services.json android/app/ 2>/dev/null || true
+
+      - name: Fix Code Errors
+        run: |
+          sed -i 's/const LoginScreen()/LoginScreen()/g' lib/main.dart
+          sed -i 's/const HomeScreen()/HomeScreen()/g' lib/main.dart
+          sed -i 's/const ProfileSetupScreen()/ProfileSetupScreen()/g' lib/main.dart
+          sed -i 's/return const LoginScreen/return LoginScreen/g' lib/main.dart
+          sed -i 's/return const HomeScreen/return HomeScreen/g' lib/main.dart
+          sed -i 's/return const ProfileSetupScreen/return ProfileSetupScreen/g' lib/main.dart
 
       - run: flutter create . --platforms=android
       - run: flutter pub get
