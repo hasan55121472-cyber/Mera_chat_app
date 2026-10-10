@@ -13,21 +13,67 @@ jobs:
         with:
           channel: 'stable'
 
-      - name: Fix Project
+      - name: Auto Fix All Files
         run: |
           mkdir -p lib
           mv -f *.dart lib/ 2>/dev/null || true
-          mkdir -p android/app
-          mv -f google-services.json android/app/ 2>/dev/null || true
 
-      - name: Fix Code Errors
-        run: |
-          sed -i 's/const LoginScreen()/LoginScreen()/g' lib/main.dart
-          sed -i 's/const HomeScreen()/HomeScreen()/g' lib/main.dart
-          sed -i 's/const ProfileSetupScreen()/ProfileSetupScreen()/g' lib/main.dart
-          sed -i 's/return const LoginScreen/return LoginScreen/g' lib/main.dart
-          sed -i 's/return const HomeScreen/return HomeScreen/g' lib/main.dart
-          sed -i 's/return const ProfileSetupScreen/return ProfileSetupScreen/g' lib/main.dart
+          # 1. user_model.dart ko auto sahi karo
+          cat > lib/user_model.dart << 'EOF'
+          import 'package:cloud_firestore/cloud_firestore.dart';
+          class UserModel {
+            final String uid; final String name; final String phoneNumber;
+            final String? photoUrl; final String photoPrivacy;
+            final String lastSeenPrivacy; final bool freezeLastSeen;
+            final Timestamp? lastSeen;
+            UserModel({required this.uid, required this.name, required this.phoneNumber, this.photoUrl, this.photoPrivacy='everyone', this.lastSeenPrivacy='everyone', this.freezeLastSeen=false, this.lastSeen});
+            factory UserModel.fromMap(Map<String, dynamic> map) {
+              return UserModel(uid: map['uid']??'', name: map['name']??'', phoneNumber: map['phoneNumber']??'', photoUrl: map['photoUrl'], photoPrivacy: map['photoPrivacy']??'everyone', lastSeenPrivacy: map['lastSeenPrivacy']??'everyone', freezeLastSeen: map['freezeLastSeen']??false, lastSeen: map['lastSeen']);
+            }
+            Map<String, dynamic> toMap() => {'uid': uid, 'name': name, 'phoneNumber': phoneNumber, 'photoUrl': photoUrl, 'photoPrivacy': photoPrivacy, 'lastSeenPrivacy': lastSeenPrivacy, 'freezeLastSeen': freezeLastSeen, 'lastSeen': lastSeen??FieldValue.serverTimestamp()};
+          }
+          EOF
+
+          # 2. privacy_settings_screen.dart ko auto sahi karo
+          cat > lib/privacy_settings_screen.dart << 'EOF'
+          import 'package:flutter/material.dart';
+          import 'package:cloud_firestore/cloud_firestore.dart';
+          import 'theme.dart';
+          import 'user_model.dart';
+          import 'auth_service.dart';
+          class PrivacySettingsScreen extends StatefulWidget { const PrivacySettingsScreen({super.key}); @override State<PrivacySettingsScreen> createState() => _PrivacySettingsScreenState(); }
+          class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
+            final AuthService _auth = AuthService();
+            @override
+            Widget build(BuildContext context) {
+              return Scaffold(
+                appBar: AppBar(title: const Text('Privacy'), backgroundColor: AppTheme.primary),
+                body: StreamBuilder<DocumentSnapshot>(
+                  stream: FirebaseFirestore.instance.collection('users').doc(_auth.currentUser!.uid).snapshots(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) return Center(child: CircularProgressIndicator(color: AppTheme.primary));
+                    final data = snapshot.data!.data() as Map<String, dynamic>?;
+                    if (data == null) return const Center(child: Text('No data'));
+                    final user = UserModel.fromMap(data);
+                    return ListView(children: [
+                      RadioListTile<String>(title: const Text('Everyone'), value: 'everyone', groupValue: user.photoPrivacy, activeColor: AppTheme.primaryLight, onChanged: (v) => _update('photoPrivacy', v!)),
+                      RadioListTile<String>(title: const Text('Contacts Only'), value: 'contacts', groupValue: user.photoPrivacy, activeColor: AppTheme.primaryLight, onChanged: (v) => _update('photoPrivacy', v!)),
+                      RadioListTile<String>(title: const Text('Nobody'), value: 'nobody', groupValue: user.photoPrivacy, activeColor: AppTheme.primaryLight, onChanged: (v) => _update('photoPrivacy', v!)),
+                      SwitchListTile(title: const Text('Freeze Last Seen'), value: user.freezeLastSeen, activeColor: AppTheme.primaryLight, onChanged: (v) => _update('freezeLastSeen', v)),
+                    ]);
+                  },
+                ),
+              );
+            }
+            Future<void> _update(String field, dynamic value) async { await FirebaseFirestore.instance.collection('users').doc(_auth.currentUser!.uid).update({field: value}); }
+          }
+          EOF
+
+          # 3. Baqi sab files me imports aur const auto fix
+          for f in lib/*.dart; do
+            grep -q "theme.dart" "$f" || sed -i "1i import 'theme.dart';" "$f"
+            sed -i 's/const AppTheme/AppTheme/g; s/const LoginScreen/LoginScreen/g; s/const HomeScreen/HomeScreen/g; s/const ProfileSetupScreen/ProfileSetupScreen/g; s/return const/return/g; s/const Center/Center/g; s/const CircularProgressIndicator/CircularProgressIndicator/g' "$f"
+          done
 
       - run: flutter create . --platforms=android
       - run: flutter pub get
