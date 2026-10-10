@@ -13,28 +13,87 @@ jobs:
         with:
           channel: 'stable'
 
-      - name: Auto Fix All Files
+      - name: Fix All Broken Dart Files
         run: |
           mkdir -p lib
           mv -f *.dart lib/ 2>/dev/null || true
 
-          # 1. user_model.dart ko auto sahi karo
+          # 1. USER MODEL - sab fields ke saath
           cat > lib/user_model.dart << 'EOF'
           import 'package:cloud_firestore/cloud_firestore.dart';
           class UserModel {
             final String uid; final String name; final String phoneNumber;
             final String? photoUrl; final String photoPrivacy;
             final String lastSeenPrivacy; final bool freezeLastSeen;
-            final Timestamp? lastSeen;
-            UserModel({required this.uid, required this.name, required this.phoneNumber, this.photoUrl, this.photoPrivacy='everyone', this.lastSeenPrivacy='everyone', this.freezeLastSeen=false, this.lastSeen});
+            final String about; final Timestamp? lastSeen;
+            UserModel({required this.uid, required this.name, required this.phoneNumber, this.photoUrl, this.photoPrivacy='everyone', this.lastSeenPrivacy='everyone', this.freezeLastSeen=false, this.about='', this.lastSeen});
             factory UserModel.fromMap(Map<String, dynamic> map) {
-              return UserModel(uid: map['uid']??'', name: map['name']??'', phoneNumber: map['phoneNumber']??'', photoUrl: map['photoUrl'], photoPrivacy: map['photoPrivacy']??'everyone', lastSeenPrivacy: map['lastSeenPrivacy']??'everyone', freezeLastSeen: map['freezeLastSeen']??false, lastSeen: map['lastSeen']);
+              return UserModel(uid: map['uid']??'', name: map['name']??'', phoneNumber: map['phoneNumber']??'', photoUrl: map['photoUrl'], photoPrivacy: map['photoPrivacy']??'everyone', lastSeenPrivacy: map['lastSeenPrivacy']??'everyone', freezeLastSeen: map['freezeLastSeen']??false, about: map['about']??'Hey there! I am using WhatsApp Clone', lastSeen: map['lastSeen']);
             }
-            Map<String, dynamic> toMap() => {'uid': uid, 'name': name, 'phoneNumber': phoneNumber, 'photoUrl': photoUrl, 'photoPrivacy': photoPrivacy, 'lastSeenPrivacy': lastSeenPrivacy, 'freezeLastSeen': freezeLastSeen, 'lastSeen': lastSeen??FieldValue.serverTimestamp()};
+            Map<String, dynamic> toMap() => {'uid': uid, 'name': name, 'phoneNumber': phoneNumber, 'photoUrl': photoUrl, 'photoPrivacy': photoPrivacy, 'lastSeenPrivacy': lastSeenPrivacy, 'freezeLastSeen': freezeLastSeen, 'about': about, 'lastSeen': lastSeen??FieldValue.serverTimestamp()};
           }
           EOF
 
-          # 2. privacy_settings_screen.dart ko auto sahi karo
+          # 2. SETTINGS SCREEN - 100% fixed
+          cat > lib/settings_screen.dart << 'EOF'
+          import 'package:flutter/material.dart';
+          import 'package:cloud_firestore/cloud_firestore.dart';
+          import 'theme.dart';
+          import 'user_model.dart';
+          import 'auth_service.dart';
+          import 'privacy_settings_screen.dart';
+
+          class SettingsScreen extends StatelessWidget {
+            SettingsScreen({super.key});
+            final AuthService _auth = AuthService();
+
+            @override
+            Widget build(BuildContext context) {
+              return Scaffold(
+                appBar: AppBar(title: const Text('Settings'), backgroundColor: AppTheme.primary),
+                body: StreamBuilder<DocumentSnapshot>(
+                  stream: FirebaseFirestore.instance.collection('users').doc(_auth.currentUser!.uid).snapshots(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) return Center(child: CircularProgressIndicator(color: AppTheme.primary));
+                    final data = snapshot.data!.data() as Map<String, dynamic>?;
+                    if (data == null) return const Center(child: Text('No user'));
+                    final user = UserModel.fromMap(data);
+
+                    return ListView(
+                      children: [
+                        const SizedBox(height: 20),
+                        Center(
+                          child: CircleAvatar(
+                            radius: 50,
+                            backgroundColor: AppTheme.primaryLight,
+                            backgroundImage: (user.photoUrl!= null && user.photoUrl!.isNotEmpty)? NetworkImage(user.photoUrl!) : null,
+                            child: (user.photoUrl == null || user.photoUrl!.isEmpty)? Text(user.name.isNotEmpty? user.name[0].toUpperCase() : 'U', style: const TextStyle(fontSize: 40, color: Colors.white)) : null,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Center(child: Text(user.name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold))),
+                        Center(child: Text(user.about, style: TextStyle(color: Colors.grey[600]))),
+                        const Divider(height: 30),
+                        ListTile(
+                          leading: const Icon(Icons.lock),
+                          title: const Text('Privacy'),
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PrivacySettingsScreen())),
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.logout, color: Colors.red),
+                          title: const Text('Log out', style: TextStyle(color: Colors.red)),
+                          onTap: () async { await _auth.signOut(); },
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              );
+            }
+          }
+          EOF
+
+          # 3. PRIVACY SCREEN - fixed
           cat > lib/privacy_settings_screen.dart << 'EOF'
           import 'package:flutter/material.dart';
           import 'package:cloud_firestore/cloud_firestore.dart';
@@ -69,10 +128,10 @@ jobs:
           }
           EOF
 
-          # 3. Baqi sab files me imports aur const auto fix
+          # 4. Baqi sab files ka const + import fix
           for f in lib/*.dart; do
             grep -q "theme.dart" "$f" || sed -i "1i import 'theme.dart';" "$f"
-            sed -i 's/const AppTheme/AppTheme/g; s/const LoginScreen/LoginScreen/g; s/const HomeScreen/HomeScreen/g; s/const ProfileSetupScreen/ProfileSetupScreen/g; s/return const/return/g; s/const Center/Center/g; s/const CircularProgressIndicator/CircularProgressIndicator/g' "$f"
+            sed -i 's/const AppTheme/AppTheme/g; s/return const/return/g; s/const Center/Center/g; s/const Text/Text/g; s/photoUrl1/photoUrl/g' "$f"
           done
 
       - run: flutter create . --platforms=android
