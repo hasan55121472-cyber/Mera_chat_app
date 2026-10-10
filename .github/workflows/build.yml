@@ -5,29 +5,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Fix scattered files
-        run: |
-          mkdir -p lib
-          mv *.dart lib/ || true
-          rm -f AndroidManifest.xml MainActivity.kt build.gradle settings.gradle || true
-          rm -f *.xml google-services.json || true
-
       - uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
-
       - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-
-      - name: Create Android Folder
-        run: flutter create. --platforms=android --org com.example.whatsappclone
-
+      - run: flutter "create.". --platforms=android
       - run: flutter pub get
       - run: flutter build apk --release
-
       - uses: actions/upload-artifact@v4
         with:
           name: app-release
