@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "648347104332",
+    "project_id": "mera-chat-app-c8e99",
+    "storage_bucket": "mera-chat-app-c8e99.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:648347104332:android:cb7f109f3fe5e4d308f0e9",
+        "android_client_info": {
+          "package_name": "com.hassan.merachatapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "648347104332-c08r984t9b0jasb45fqlh9tflsapuo3f.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD1-P0Ati2Ea5tbtw3Whs0kHEjDm6bK2zo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "648347104332-c08r984t9b0jasb45fqlh9tflsapuo3f.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
