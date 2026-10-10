@@ -7,45 +7,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
       - uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
+          
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.22.0'
           channel: 'stable'
-      - name: Fix All Files
+
+      - name: Setup Project
         run: |
-          mkdir -p lib
-          mv -f *_screen.dart lib/ 2>/dev/null || true
-          mv -f *_service.dart lib/ 2>/dev/null || true
-          mv -f *_model.dart lib/ 2>/dev/null || true
-          mv -f main.dart lib/ 2>/dev/null || true
-          mv -f theme.dart lib/ 2>/dev/null || true
-          mv -f helpers.dart lib/ 2>/dev/null || true
           flutter create . --platforms=android --project-name whatsapp_clone
           cp -f google-services.json android/app/ 2>/dev/null || true
-          
-          # 3 kharab files ko working banao
-          cat > lib/settings_screen.dart << 'EOF'
-          import 'package:flutter/material.dart';
-          class SettingsScreen extends StatelessWidget { const SettingsScreen({super.key}); @override Widget build(BuildContext context) { return Scaffold(appBar: AppBar(title: const Text('Settings')), body: const Center(child: Text('Settings'))); } }
-          EOF
-          
-          cat > lib/calls_screen.dart << 'EOF'
-          import 'package:flutter/material.dart';
-          class CallsScreen extends StatelessWidget { const CallsScreen({super.key}); @override Widget build(BuildContext context) { return Scaffold(appBar: AppBar(title: const Text('Calls')), body: const Center(child: Text('Calls Screen'))); } }
-          EOF
-          
-          cat > lib/status_screen.dart << 'EOF'
-          import 'package:flutter/material.dart';
-          class StatusScreen extends StatelessWidget { const StatusScreen({super.key}); @override Widget build(BuildContext context) { return Scaffold(appBar: AppBar(title: const Text('Status')), body: const Center(child: Text('Status Screen'))); } }
-          EOF
 
-      - run: flutter pub get
-      - run: flutter build apk --release
-      - uses: actions/upload-artifact@v4
+      - name: Get Packages
+        run: flutter pub get
+
+      - name: Build APK
+        run: flutter build apk --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
           name: app-release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
