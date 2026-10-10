@@ -1,32 +1,37 @@
-name: build
+name: Build APK
 on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Fix scattered files
+        run: |
+          mkdir -p lib
+          mv *.dart lib/ || true
+          rm -f AndroidManifest.xml MainActivity.kt build.gradle settings.gradle
+          rm -f *.xml google-services.json || true
+          ls -la
+          ls -la lib/
+
       - uses: actions/setup-java@v4
         with:
-          distribution: temurin
-          java-version: 17
+          distribution: 'zulu'
+          java-version: '17'
+
       - uses: subosito/flutter-action@v2
         with:
-          channel: stable
+          channel: 'stable'
 
-      - name: Unzip and Build APK
+      - name: Create Android Folder
         run: |
-          ls -la
-          unzip -o whatsapp_clone.zip -d. || true
-          echo "---- After unzip ----"
-          ls -la
-          PROJECT=$(find. -name "pubspec.yaml" | head -n 1 | xargs dirname)
-          echo "Project found at: $PROJECT"
-          cd "$PROJECT"
-          flutter pub get
-          flutter build apk --debug
+          flutter create. --platforms=android --org com.example.whatsappclone
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - run: flutter pub get
+      - run: flutter build apk --release
+
+      - uses: actions/upload-artifact@v4
         with:
-          name: Mera-Chat-APK
-          path: "**/app-debug.apk"
+          name: app-release
+          path: build/app/outputs/flutter-apk/app-release.apk
